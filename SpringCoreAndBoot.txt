@@ -923,6 +923,426 @@ public class ConstructorInjection {
 Assigment -1:
 
 Create Order and Product classes , populate data accordingly using setter and constructor injection...
+.....................................................................................
+    	   Interface Based Dependency Injection
+..................................................................................
+
+1.Declare interface
+
+package com.ibm.spring.core.di.interfaces;
+
+import java.util.List;
+
+public interface Repository {
+    List<String> listAll();
+}
+
+2.Implementations
+
+package com.ibm.spring.core.di.interfaces;
+
+import java.util.List;
+
+public class SQLRepositoryImpl implements Repository {
+    @Override
+    public List<String> listAll() {
+        return List.of("CREATE", "UPDATE", "DELETE", "SELECT");
+    }
+}
+
+package com.ibm.spring.core.di.interfaces;
+
+import java.util.List;
+
+public class NOSQLRepositoryImpl implements Repository {
+    @Override
+    public List<String> listAll() {
+        return List.of("SET", "GET");
+    }
+}
+
+Injector class:
+package com.ibm.spring.core.di.interfaces;
+
+public class CustomerDAO {
+    private Repository repository;
+
+    public CustomerDAO() {
+    }
+
+    public CustomerDAO(Repository repository) {
+        this.repository = repository;
+    }
+
+    public Repository getRepository() {
+        return repository;
+    }
+
+    public void setRepository(Repository repository) {
+        this.repository = repository;
+    }
+}
+
+
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xsi:schemaLocation="
+        http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd">
+
+    <!--     Create all Interface implementations-->
+
+    <bean id="sql" class="com.ibm.spring.core.di.interfaces.SQLRepositoryImpl"/>
+    <bean id="nosql" class="com.ibm.spring.core.di.interfaces.NOSQLRepositoryImpl"/>
+
+    <bean id="customerDAO" class="com.ibm.spring.core.di.interfaces.CustomerDAO">
+        <!--        <constructor-arg name="repository" ref="nosql"/>-->
+        <constructor-arg name="repository" ref="sql"/>
+    </bean>
+
+
+</beans>
+Main:
+package com.ibm.spring.core.di.interfaces;
+
+import org.springframework.context.ApplicationContext;
+import org.springframework.context.support.ClassPathXmlApplicationContext;
+
+public class InterfaceMain {
+    public static void main(String[] args) {
+        ApplicationContext context = new ClassPathXmlApplicationContext("beans-interface-di.xml");
+        CustomerDAO customerDAO = context.getBean(CustomerDAO.class);
+        System.out.println(customerDAO.getRepository().listAll());
+
+    }
+}
+....................................................................................
+Bean Definitions:
+
+1.How to create bean 
+   class,factory-method
+
+2.How to name beans?
+   id,name,alias
+
+3.scope of the beans? : visibility of the bean
+   singleton,prototype,
+   request,session,application,websocket
+
+4.Dependence Injections
+   constructor
+   setter
+   autowire
+
+5.Lazy initialization mode
+ controlling bean creations
+  eagar-default
+  lazy-ondemand
+  lazy-init="true"
+
+5.How to simplify bean injections? 
+   Autowiring mode 
+ no,byName,byType,constructor  
+
+.....................................................................................
+.............................................................................................
+					Bean Creation
+............................................................................................
+
+1.Via class  
+   Spring creates using new Operator
+  new Order()
+  <bean id="order" class="com.ibm.spring.core.Order"/>
+
+2.Via Factory Pattern
+
+-if constructor marked private
+   via factory factory api.
+
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xsi:schemaLocation="
+        http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd">
+
+    <!--    <bean id="user" class="com.ibm.spring.core.beans.factory.User">-->
+    <!--        <property name="name" value="admin"/>-->
+    <!--        <property name="password" value="admin"/>-->
+    <!--    </bean>-->
+
+    <!-- Create Instance using factory pattern-->
+    <bean id="user" class="com.ibm.spring.core.beans.factory.User" factory-method="getInstance">
+        <property name="name" value="admin"/>
+        <property name="password" value="admin"/>
+    </bean>
+</beans>
+
+package com.ibm.spring.core.beans.factory;
+
+public class User {
+    private String name;
+    private String password;
+
+    private User() {
+
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    //Factory Method
+    public static User getInstance() {
+        System.out.println("Factory");
+        return new User();
+    }
+
+    public void setName(String name) {
+        this.name = name;
+    }
+
+    public String getPassword() {
+        return password;
+    }
+
+    public void setPassword(String password) {
+        this.password = password;
+    }
+}
+package com.ibm.spring.core.beans.factory;
+
+import org.springframework.context.ApplicationContext;
+import org.springframework.context.support.ClassPathXmlApplicationContext;
+
+public class FactoryMain {
+    public static void main(String[] args) {
+        ApplicationContext context = new ClassPathXmlApplicationContext("beans-factory.xml");
+        User user = context.getBean(User.class);
+        System.out.println(user.getName() + user.getPassword());
+    }
+}
+.....................................................................................
+			 Bean Scopes
+.....................................................................................
+Generally, you can create multiple instance from bean definition.
+  some times if you want to control that bean creation
+you can use bean creation scope.
+
+Spring supports 6 scopes:
+ singleton,prototype - core scope
+   request,session,application,websocket -web env
+
+
+1.singleton
+ (Default) Scopes a single bean definition to a single object instance for each Spring IoC container.
+ if you call getBean no of time, spring returns the only one instance at any point of time.
+This is default scope.
+
+
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xsi:schemaLocation="
+        http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd">
+
+    <bean id="hello" class="com.ibm.spring.core.beans.scope.Hello"/>
+
+</beans>
+package com.ibm.spring.core.beans.scope;
+
+import org.springframework.context.ApplicationContext;
+import org.springframework.context.support.ClassPathXmlApplicationContext;
+
+public class SingleTon {
+    public static void main(String[] args) {
+        ApplicationContext context = new ClassPathXmlApplicationContext("beans-scope.xml");
+        Hello hello1 = context.getBean(Hello.class);
+        System.out.println(hello1.hashCode());
+
+        Hello hello2 = context.getBean(Hello.class);
+        System.out.println(hello2.hashCode());
+    }
+}
+
+outPut:
+1436664465
+1436664465
+
+Here we can see the same hashcode value, meaning that , we have only one instance
+....................................................................................
+2.prototype:
+a new bean instance is created every time a request for that specific bean is made 
+that is, the bean is injected into another bean or you request it through a getBean() method call on the container.
+
+
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xsi:schemaLocation="
+        http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd">
+
+    <bean id="helloProto" class="com.ibm.spring.core.beans.scope.Hello" scope="prototype"/>
+
+</beans>
+
+package com.ibm.spring.core.beans.scope;
+
+
+import org.springframework.context.ApplicationContext;
+import org.springframework.context.support.ClassPathXmlApplicationContext;
+
+public class Prototype {
+    public static void main(String[] args) {
+        ApplicationContext context = new ClassPathXmlApplicationContext("beans-scope.xml");
+        Hello hello1 = context.getBean(Hello.class);
+        System.out.println(hello1.hashCode());
+
+        Hello hello2 = context.getBean(Hello.class);
+        System.out.println(hello2.hashCode());
+    }
+}
+Output:
+1173643169
+1282287470
+.....................................................................................
+			     Automations
+
+How to gradually reduce configurations from the xml, so that spring takes care internally, we can reduce developer job with related to focusing on configuration...
+
+DI automations:
+
+Dependency Injections:
+ ->property - setter injections
+ ->constructor-arg ref ->constructor injections
+
+->autowire 
+Which is not new injection type, but it simplifies property and constructor injections
+
+     no ->Explicit via property or constructor-arg
+     byName - Implicit via property
+     byType - Implicit via type + property
+     constructor - Implicit via constructor
+
+autowire="no | byName | byType | constructor"
+
+Lab
+ 
+Customer
+ |
+ Address -- via autowire
+
+Without auto wire:
+
+<!--    Without auto wire - manual injection-->
+    <bean id="custAddress" class="com.ibm.spring.core.di.Address">
+        <property name="city" value="City"/>
+        <property name="state" value="State"/>
+    </bean>
+    <bean id="customer" class="com.ibm.spring.core.di.Customer">
+        <property name="id" value="0"/>
+        <property name="name" value="Name"/>
+        <!--        Dependency Injection-->
+        <property name="address" ref="custAddress"/>
+    </bean>
+
+
+With Auto Wire:
+
+    <bean id="custAddress" class="com.ibm.spring.core.di.Address">
+        <property name="city" value="City"/>
+        <property name="state" value="State"/>
+    </bean>
+    <bean id="customer" class="com.ibm.spring.core.di.Customer" autowire="byType">
+    </bean>
+
+package com.ibm.spring.core.di.autowrires;
+
+import com.ibm.spring.core.di.Customer;
+import org.springframework.context.ApplicationContext;
+import org.springframework.context.support.ClassPathXmlApplicationContext;
+
+public class AutoWireInjection {
+    public static void main(String[] args) {
+        ApplicationContext context = new ClassPathXmlApplicationContext("beans-autowire.xml");
+        Customer customer = context.getBean(Customer.class);
+        System.out.println(customer);
+
+    }
+}
+.....................................................................................
+Bean life cycles:
+.................
+
+init
+destroy
+
+Points:
+1.if you want to initalize the resources,
+ Resources:
+   Resource is nothing but ,something outside jvm
+    ex: FileSystem,Databases,Network sockets,Graphics context....
+  Resources must be mananaged properly , if not , it will give you
+ memory leaks.
+
+In general , resources are initialized inside Class constructors
+eg:Establishing database,socket connections, create file points,open file
+
+According to spring best practices, dont do it inside constructor
+ Why
+   WHich hindrences the bean intialization, which will drop app startup performance.
+
+then where can i initlaize
+ spring provides life cycle hooks
+
+   ->init-method="initmethod"
+   ->destroy-method="destroymethod" - Resources clean up
+
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xsi:schemaLocation="
+        http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd">
+
+  <bean id="database" class="com.ibm.spring.core.beans.lifecycles.DatabaseConnection" destroy-method="destroy" init-method="init"/>
+
+</beans>
+package com.ibm.spring.core.beans.lifecycles;
+
+public class DatabaseConnection {
+
+    public void init() {
+        System.out.println("Database is being initialized");
+    }
+
+    public void destroy() {
+        System.out.println("Database connection is closed");
+    }
+
+}
+package com.ibm.spring.core.beans.lifecycles;
+
+import org.springframework.context.ApplicationContext;
+import org.springframework.context.ConfigurableApplicationContext;
+import org.springframework.context.support.ClassPathXmlApplicationContext;
+
+public class LifeCycles {
+    public static void main(String[] args) {
+//        ApplicationContext context = new ClassPathXmlApplicationContext("beans-lifecycle.xml");
+//        context.getBean(DatabaseConnection.class);
+
+        ConfigurableApplicationContext context = new ClassPathXmlApplicationContext("beans-lifecycle.xml");
+        context.getBean(DatabaseConnection.class);
+
+        context.registerShutdownHook();
+    }
+}
+.....................................................................................
+
+
+
+
+
+
 
 
 
