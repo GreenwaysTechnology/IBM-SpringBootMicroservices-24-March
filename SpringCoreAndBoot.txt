@@ -647,6 +647,26 @@ XML based configuration:
 
 place beans.xml in the class path - resources/beans.xml
 
+
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xsi:schemaLocation="
+        http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd">
+
+    <!-- bean definitions here -->
+    <bean id="customer" class="com.ibm.spring.core.beans.Customer">
+        <!--        Default values set via setters-->
+        <!--        <property name="id" value="1"/>-->
+        <!--        <property name="name" value="Ram"/>-->
+
+        <!--        Default values set via constructors-->
+        <constructor-arg name="id" value="0"/>
+        <constructor-arg name="name" value="Foo"/>
+
+    </bean>
+</beans>
+
 package com.ibm.spring.core.beans;
 
 import org.springframework.context.ApplicationContext;
@@ -672,6 +692,242 @@ public class ObjectCreationsWithSpring {
 
     }
 }
+...................................................................................
+			 Depedency Injection
+
+
+What is dependency Injection?
+
+  Creating Objects
+  Linking objects
+  Setting Object Property values
+  Setting Object references with Object who refers it.
+
+Dependency Injection on reference types and Primitives.
+
+class Customer {
+   private int id - primtive - Dependency
+   private Order order - Reference type - Dependency
+}
+
+Types of DI:
+
+1.Setter
+    Linking objects after objects created
+2.Constructor
+    Linking objects, During object creation.
+3.Field Injection
+   Linking objects after Creation
+
+
+
+When to use Setter vs Constructor?
+
+Note: 
+ Constructor properties are initlized during object creations
+ Settter properties are initlized after object creations
+
+Spring supports both.You can mix and match.
+
+
+Constructors:
+  ->Enforce mandatory dependencies
+
+Setters:
+ 1.Allow optional dependenices
+
+
+Setter and constructor injections can be done with primtive data types and reference types:
+
+
+Reference Type eg:
+..................
+
+Customer has address.
+
+Setter Example:
+
+beans-di.xml
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xsi:schemaLocation="
+        http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd">
+
+    <bean id="custAddress" class="com.ibm.spring.core.di.Address">
+        <property name="city" value="City"/>
+        <property name="state" value="State"/>
+    </bean>
+    <bean id="customer" class="com.ibm.spring.core.di.Customer">
+        <property name="id" value="0"/>
+        <property name="name" value="Name"/>
+        <!--        Dependency Injection-->
+        <property name="address" ref="custAddress"/>
+    </bean>
+
+</beans>
+
+
+package com.ibm.spring.core.di;
+
+public class Address {
+    private String city;
+    private String state;
+
+    public Address() {
+    }
+
+    public Address(String city, String state) {
+        this.city = city;
+        this.state = state;
+    }
+
+    public String getCity() {
+        return city;
+    }
+
+    public void setCity(String city) {
+        this.city = city;
+    }
+
+    public String getState() {
+        return state;
+    }
+
+    public void setState(String state) {
+        this.state = state;
+    }
+}
+
+
+package com.ibm.spring.core.di;
+
+public class Customer {
+    private int id;
+    private String name;
+    //has-a
+    private Address address;
+
+    public Customer() {
+    }
+
+    public Customer(int id, String name, Address address) {
+        this.id = id;
+        this.name = name;
+        this.address = address;
+    }
+
+    public int getId() {
+        return id;
+    }
+
+    public void setId(int id) {
+        this.id = id;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
+    }
+
+    public Address getAddress() {
+        return address;
+    }
+
+    public void setAddress(Address address) {
+        this.address = address;
+    }
+}
+
+
+
+package com.ibm.spring.core.di;
+
+import org.springframework.context.ApplicationContext;
+import org.springframework.context.support.ClassPathXmlApplicationContext;
+
+public class SetterInjection {
+    public static void main(String[] args) {
+        ApplicationContext context = new ClassPathXmlApplicationContext("beans-di.xml");
+        //Get the customer Bean
+        Customer customer = context.getBean(Customer.class);
+        //Get all Customer information
+        System.out.println("Id" + customer.getId());
+        System.out.println("Name " + customer.getName());
+        System.out.println("Address " + customer.getAddress().getCity() + " " + customer.getAddress().getState());
+
+        customer.setId(1);
+        customer.setName("Subramanian Murugan");
+        Address address = customer.getAddress();
+        address.setCity("Coimbatore");
+        address.setState("Tamil nadu");
+        customer.setAddress(address);
+
+        System.out.println("Id" + customer.getId());
+        System.out.println("Name " + customer.getName());
+        System.out.println("Address " + customer.getAddress().getCity() + " " + customer.getAddress().getState());
+
+    }
+}
+
+Constructors Injection:
+.......................
+beans-di-constructors.xml
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xsi:schemaLocation="
+        http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd">
+
+    <bean id="custAddress" class="com.ibm.spring.core.di.Address">
+        <constructor-arg name="city" value="Chennai"/>
+        <constructor-arg name="state" value="Tamil Nadu"/>
+    </bean>
+    <bean id="customer" class="com.ibm.spring.core.di.Customer">
+        <constructor-arg name="id" value="1"/>
+        <constructor-arg name="name" value="Subramanian Murugan"/>
+        <constructor-arg name="address" ref="custAddress"/>
+    </bean>
+
+</beans>
+
+package com.ibm.spring.core.di;
+
+import org.springframework.context.ApplicationContext;
+import org.springframework.context.support.ClassPathXmlApplicationContext;
+
+public class ConstructorInjection {
+    public static void main(String[] args) {
+        ApplicationContext context = new ClassPathXmlApplicationContext("beans-di-constructors.xml");
+        //Get the customer Bean
+        Customer customer = context.getBean(Customer.class);
+        //Get all Customer information
+        System.out.println("Id" + customer.getId());
+        System.out.println("Name " + customer.getName());
+        System.out.println("Address " + customer.getAddress().getCity() + " " + customer.getAddress().getState());
+
+
+    }
+}
+.....................................................................................
+				Dependency Injection values
+
+1.You can inject primitives values- int,float,string,char,boolean
+2.You can inject objects -Customer ,Address
+3.You can inject list - Collections,Map,List,Set
+.....................................................................................	
+
+Assigment -1:
+
+Create Order and Product classes , populate data accordingly using setter and constructor injection...
+
+
+
+
+
 
 
 
