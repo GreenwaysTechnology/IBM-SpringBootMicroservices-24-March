@@ -2325,5 +2325,806 @@ public class JavaConfigDependencyInjection {
         System.out.println(orderService.getCustomer());
     }
 }
+.....................................................................................
+		How to remove bean creations from the java config
+....................................................................................
+@Component-scan === beans.xml <context:component-scan base-package="com.ibm.spring">
+
+Note:
+ Please disable all any code which is written to create beans automatically.
+Note:
+ create new Project 
+
+
+package com.ibm.spring.core;
+
+import org.springframework.stereotype.Service;
+
+@Service
+public class HelloService {
+
+    public String sayHello() {
+        return "Hello";
+    }
+}
+package com.ibm.spring.core;
+
+public class User {
+    private String id;
+    private String name;
+
+    public User() {
+    }
+
+    public User(String id, String name) {
+        this.id = id;
+        this.name = name;
+    }
+
+    public String getId() {
+        return id;
+    }
+
+    public void setId(String id) {
+        this.id = id;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
+    }
+}
+
+
+package com.ibm.spring.core;
+
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.ComponentScan;
+
+@ComponentScan(basePackages = "com.ibm")
+public class AppConfig {
+
+    //Bean
+    @Bean
+    public User createUser(){
+        return  new User();
+    }
+}
+
+package com.ibm.spring.core;
+
+import org.springframework.context.ApplicationContext;
+import org.springframework.context.annotation.AnnotationConfigApplicationContext;
+
+public class JavaConfigMain {
+    public static void main(String[] args) {
+        ApplicationContext context = new AnnotationConfigApplicationContext(AppConfig.class);
+        HelloService helloService = context.getBean(HelloService.class);
+        System.out.println(helloService.sayHello());
+        User user = context.getBean(User.class);
+        System.out.println(user);
+    }
+}
+....................................................................................
+		    Auto Configuration : Automation 
+.....................................................................................
+Spring allows us automatically configure your spring application based on bean definitions in the "class path"
+
+How to opt-in auto configuration?
+
+@EnableAutoConfiguration or @SpringBootApplication.
+.....................................................................................
+			 Getting started with Spring Boot Architecture
+....................................................................................
+
+What is Spring Boot?
+
+  Spring Boot is configuration system, this configure beans auotmatically without using any explicit/external configurations defined by developer.
+
+ auto-configuration attempts to automatically configure your Spring application based on the "jar dependencies" that you have added
+
+ Spring Boot is going to initalize the beans , not only in the application but also in the jar files.
+
+ You are going to create spring application, which uses the following features
+
+ 1.web 
+ 2.database
+ 3.logging
+ 4.caching
+
+for ex, i want to connect to database called mysql, i need to configure datasources,connection informations,transactions, hibernate and jpa configurations...
+In the bean defintions..
+  But in Spring 5.x autoconfiguration helps to configure spring app in easy way based on "opinions" such i want database,i want to build webservice, i want to enable logging, i want to enable caching, i want to enable SomeXXX...
+
+if i want, add that jar in the class, spring prvoides most of the common settings to kick start app as quick as possible.
+
+ Spring team, created a separate project based on "auto configuration" , that is called "Spring Boot".
+
+
+Spring Boot makes it easy to create stand-alone, production-grade Spring based Applications that you can "just run".
+
+We take an opinionated view of the Spring platform and third-party libraries so you can get started with minimum fuss. Most Spring Boot applications need minimal Spring configuration.
+
+Spring Boot Focus Mainly Configuration
+
+1.Build Configuration - lib configuration -pom.xml
+2.Application Configuration.
+
+					Why Spring Boot?
+
+Spring Boot  starters reduces build dependency - POM Dependencies/project dependencies  AutoConfigrator reduces the AppDepedency
+
+1.Create stand-alone Spring applications
+   You can deploy apps in containers,cloud.....easily
+
+2.Embeded Tomcat, Jetty or Undertow directly (no need to deploy WAR files)
+   SPring boots provides execuatble jar / fat jar /uber jar.	
+
+3.Provide opinionated 'starter' dependencies to simplify your build configuration
+     Looks like profie based configuration which is applied even for pom dependencies
+
+4.Automatically configure Spring and 3rd party libraries whenever possible
+    Via autoconfiguration and class path scanning.
+
+Provide production-ready features such as metrics, health checks, and externalized configuration
+
+How to begin with spring boot application?
+
+YOu can create standalone spring boot app 
+YOu can create web spring boot app
+
+
+if you want to create spring boot project, https://start.spring.io/
+
+
+Use Case : How to create standalone cli based Spring boot application.
+
+pom.xml
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+	<modelVersion>4.0.0</modelVersion>
+	<parent>
+		<groupId>org.springframework.boot</groupId>
+		<artifactId>spring-boot-starter-parent</artifactId>
+		<version>3.2.3</version>
+		<relativePath/> <!-- lookup parent from repository -->
+	</parent>
+	<groupId>com.ibm</groupId>
+	<artifactId>springbootbasics</artifactId>
+	<version>0.0.1-SNAPSHOT</version>
+	<name>springbootbasics</name>
+	<description>Demo project for Spring Boot</description>
+	<properties>
+		<java.version>17</java.version>
+	</properties>
+	<dependencies>
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter</artifactId>
+		</dependency>
+
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-test</artifactId>
+			<scope>test</scope>
+		</dependency>
+	</dependencies>
+
+	<build>
+		<plugins>
+			<plugin>
+				<groupId>org.springframework.boot</groupId>
+				<artifactId>spring-boot-maven-plugin</artifactId>
+			</plugin>
+		</plugins>
+	</build>
+
+</project>
+
+
+package com.ibm.springbootbasics;
+
+import org.springframework.boot.SpringApplication;
+import org.springframework.boot.autoconfigure.SpringBootApplication;
+
+@SpringBootApplication
+public class SpringbootbasicsApplication {
+
+	public static void main(String[] args) {
+		SpringApplication.run(SpringbootbasicsApplication.class, args);
+	}
+
+}
+
+After Running;
+"C:\Program Files\Java\jdk-17\bin\java.exe" "-javaagent:C:\Program Files\JetBrains\IntelliJ IDEA Community Edition 2023.3.4\lib\idea_rt.jar=61026:C:\Program Files\JetBrains\IntelliJ IDEA Community Edition 2023.3.4\bin" -Dfile.encoding=UTF-8 -classpath G:\IBM\2024\March\SpringMicroservices\springbootbasics\target\classes;C:\Users\subu\.m2\repository\org\springframework\boot\spring-boot-starter\3.2.3\spring-boot-starter-3.2.3.jar;C:\Users\subu\.m2\repository\org\springframework\boot\spring-boot\3.2.3\spring-boot-3.2.3.jar;C:\Users\subu\.m2\repository\org\springframework\spring-context\6.1.4\spring-context-6.1.4.jar;C:\Users\subu\.m2\repository\org\springframework\spring-aop\6.1.4\spring-aop-6.1.4.jar;C:\Users\subu\.m2\repository\org\springframework\spring-beans\6.1.4\spring-beans-6.1.4.jar;C:\Users\subu\.m2\repository\org\springframework\spring-expression\6.1.4\spring-expression-6.1.4.jar;C:\Users\subu\.m2\repository\io\micrometer\micrometer-observation\1.12.3\micrometer-observation-1.12.3.jar;C:\Users\subu\.m2\repository\io\micrometer\micrometer-commons\1.12.3\micrometer-commons-1.12.3.jar;C:\Users\subu\.m2\repository\org\springframework\boot\spring-boot-autoconfigure\3.2.3\spring-boot-autoconfigure-3.2.3.jar;C:\Users\subu\.m2\repository\org\springframework\boot\spring-boot-starter-logging\3.2.3\spring-boot-starter-logging-3.2.3.jar;C:\Users\subu\.m2\repository\ch\qos\logback\logback-classic\1.4.14\logback-classic-1.4.14.jar;C:\Users\subu\.m2\repository\ch\qos\logback\logback-core\1.4.14\logback-core-1.4.14.jar;C:\Users\subu\.m2\repository\org\apache\logging\log4j\log4j-to-slf4j\2.21.1\log4j-to-slf4j-2.21.1.jar;C:\Users\subu\.m2\repository\org\apache\logging\log4j\log4j-api\2.21.1\log4j-api-2.21.1.jar;C:\Users\subu\.m2\repository\org\slf4j\jul-to-slf4j\2.0.12\jul-to-slf4j-2.0.12.jar;C:\Users\subu\.m2\repository\jakarta\annotation\jakarta.annotation-api\2.1.1\jakarta.annotation-api-2.1.1.jar;C:\Users\subu\.m2\repository\org\springframework\spring-core\6.1.4\spring-core-6.1.4.jar;C:\Users\subu\.m2\repository\org\springframework\spring-jcl\6.1.4\spring-jcl-6.1.4.jar;C:\Users\subu\.m2\repository\org\yaml\snakeyaml\2.2\snakeyaml-2.2.jar;C:\Users\subu\.m2\repository\org\slf4j\slf4j-api\2.0.12\slf4j-api-2.0.12.jar com.ibm.springbootbasics.SpringbootbasicsApplication
+
+  .   ____          _            __ _ _
+ /\\ / ___'_ __ _ _(_)_ __  __ _ \ \ \ \
+( ( )\___ | '_ | '_| | '_ \/ _` | \ \ \ \
+ \\/  ___)| |_)| | | | | || (_| |  ) ) ) )
+  '  |____| .__|_| |_|_| |_\__, | / / / /
+ =========|_|==============|___/=/_/_/_/
+ :: Spring Boot ::                (v3.2.3)
+
+2024-03-21T10:50:14.455+05:30  INFO 7756 --- [springbootbasics] [           main] c.i.s.SpringbootbasicsApplication        : Starting SpringbootbasicsApplication using Java 17.0.10 with PID 7756 (G:\IBM\2024\March\SpringMicroservices\springbootbasics\target\classes started by subu in G:\IBM\2024\March\SpringMicroservices\springbootbasics)
+2024-03-21T10:50:14.457+05:30  INFO 7756 --- [springbootbasics] [           main] c.i.s.SpringbootbasicsApplication        : No active profile set, falling back to 1 default profile: "default"
+2024-03-21T10:50:15.159+05:30  INFO 7756 --- [springbootbasics] [           main] c.i.s.SpringbootbasicsApplication        : Started SpringbootbasicsApplication in 1.131 seconds (process running for 1.495)
+
+Process finished with exit code 0
+
+.....................................................................................
+			Spring Boot Maven Dependency Graph
+....................................................................................
+[INFO] com.ibm:springbootbasics:jar:0.0.1-SNAPSHOT
+[INFO] +- org.springframework.boot:spring-boot-starter:jar:3.2.3:compile
+[INFO] |  +- org.springframework.boot:spring-boot:jar:3.2.3:compile
+[INFO] |  |  \- org.springframework:spring-context:jar:6.1.4:compile
+[INFO] |  |     +- org.springframework:spring-aop:jar:6.1.4:compile
+[INFO] |  |     +- org.springframework:spring-beans:jar:6.1.4:compile
+[INFO] |  |     +- org.springframework:spring-expression:jar:6.1.4:compile
+[INFO] |  |     \- io.micrometer:micrometer-observation:jar:1.12.3:compile
+[INFO] |  |        \- io.micrometer:micrometer-commons:jar:1.12.3:compile
+[INFO] |  +- org.springframework.boot:spring-boot-autoconfigure:jar:3.2.3:compile
+[INFO] |  +- org.springframework.boot:spring-boot-starter-logging:jar:3.2.3:compile
+[INFO] |  |  +- ch.qos.logback:logback-classic:jar:1.4.14:compile
+[INFO] |  |  |  \- ch.qos.logback:logback-core:jar:1.4.14:compile
+[INFO] |  |  +- org.apache.logging.log4j:log4j-to-slf4j:jar:2.21.1:compile
+[INFO] |  |  |  \- org.apache.logging.log4j:log4j-api:jar:2.21.1:compile
+[INFO] |  |  \- org.slf4j:jul-to-slf4j:jar:2.0.12:compile
+[INFO] |  +- jakarta.annotation:jakarta.annotation-api:jar:2.1.1:compile
+[INFO] |  +- org.springframework:spring-core:jar:6.1.4:compile
+[INFO] |  |  \- org.springframework:spring-jcl:jar:6.1.4:compile
+[INFO] |  \- org.yaml:snakeyaml:jar:2.2:compile
+[INFO] \- org.springframework.boot:spring-boot-starter-test:jar:3.2.3:test
+[INFO]    +- org.springframework.boot:spring-boot-test:jar:3.2.3:test
+[INFO]    +- org.springframework.boot:spring-boot-test-autoconfigure:jar:3.2.3:test
+[INFO]    +- com.jayway.jsonpath:json-path:jar:2.9.0:test
+[INFO]    |  \- org.slf4j:slf4j-api:jar:2.0.12:compile
+[INFO]    +- jakarta.xml.bind:jakarta.xml.bind-api:jar:4.0.1:test
+[INFO]    |  \- jakarta.activation:jakarta.activation-api:jar:2.1.2:test
+[INFO]    +- net.minidev:json-smart:jar:2.5.0:test
+[INFO]    |  \- net.minidev:accessors-smart:jar:2.5.0:test
+[INFO]    |     \- org.ow2.asm:asm:jar:9.3:test
+[INFO]    +- org.assertj:assertj-core:jar:3.24.2:test
+[INFO]    |  \- net.bytebuddy:byte-buddy:jar:1.14.12:test
+[INFO]    +- org.awaitility:awaitility:jar:4.2.0:test
+[INFO]    +- org.hamcrest:hamcrest:jar:2.2:test
+[INFO]    +- org.junit.jupiter:junit-jupiter:jar:5.10.2:test
+[INFO]    |  +- org.junit.jupiter:junit-jupiter-api:jar:5.10.2:test
+[INFO]    |  |  +- org.opentest4j:opentest4j:jar:1.3.0:test
+[INFO]    |  |  +- org.junit.platform:junit-platform-commons:jar:1.10.2:test
+[INFO]    |  |  \- org.apiguardian:apiguardian-api:jar:1.1.2:test
+[INFO]    |  +- org.junit.jupiter:junit-jupiter-params:jar:5.10.2:test
+[INFO]    |  \- org.junit.jupiter:junit-jupiter-engine:jar:5.10.2:test
+[INFO]    |     \- org.junit.platform:junit-platform-engine:jar:1.10.2:test
+[INFO]    +- org.mockito:mockito-core:jar:5.7.0:test
+[INFO]    |  +- net.bytebuddy:byte-buddy-agent:jar:1.14.12:test
+[INFO]    |  \- org.objenesis:objenesis:jar:3.3:test
+[INFO]    +- org.mockito:mockito-junit-jupiter:jar:5.7.0:test
+[INFO]    +- org.skyscreamer:jsonassert:jar:1.5.1:test
+[INFO]    |  \- com.vaadin.external.google:android-json:jar:0.0.20131108.vaadin1:test
+[INFO]    +- org.springframework:spring-test:jar:6.1.4:test
+[INFO]    \- org.xmlunit:xmlunit-core:jar:2.9.1:test
+[INFO] ------------------------------------------------------------------------
+[INFO] BUILD SUCCESS
+[INFO] ------------------------------------------------------------------------
+[INFO] Total time:  6.282 s
+[INFO] Finished at: 2024-03-21T10:57:57+05:30
+[INFO] ------------------------------------------------------------------------
+
+Here one pom dependency will bring all dependant libs.
+
+
+AutoConfiguration:
+..................
+
+Configuration is based on config meta data provied in "META-INF/spring.factories"
+
+org.springframework.boot.spring-autoconfigure.2.5.3
+
+spring.factories 
+  It is meta configuration file read by spring container to create objects/beans based on certain conditions -rules
+
+
+Spring container scans spring.factories file , starts loading configuration, which apples @condtional annotations.
+
+  Container------|AppConfig----|spring.factories----starts initalizing beans/configurations/components   based on rules(conditions) => Spring Boot.
+
+
+additional-spring-configuration-metadata.json
+
+  {
+      "name": "server.port",
+      "defaultValue": 8080
+    }
+
+
+Annotations are processed by ASM - java bytecode engineering lib.
+https://asm.ow2.io/
+.....................................................................................
+			  How opinioned app development works
+			    (Conditional Bean Creations)
+...................................................................................
+
+
+   When building a spring boot app, we sometimes want to only load beans or modules(configurations) into the application context(container) if some conditions met, Be it disable some beans during tests, or react to a certain property in the runtime env.
+
+
+eg:
+
+ Some beans work in test env, the same bean i dont want in production env.
+ enable or disable some certain cross cutting concerns.
+  eg:
+    we have built a module that configures security, during dev test, we dont want to have username and passwords every time. so i want to disable the whole security module in local tests.
+ 
+ if some external resources is available without which they cant work. 
+   for eg: my application should not work if there is no logback.xml file has been found on classpath.
+
+- if beans does not exits  / exits
+- if module does not exits / exits
+- if external does not exits  / exits
+
+Declaring Conditional Bean:
+..........................
+In application, you can declare bean any where, optionaly we can add condition.
+
+only if this condition is satisifed will the bean added to the application context
+
+
+eg:
+
+@Configuration
+class MyBeanConfig {
+
+ @Conditional(...)
+ @Bean
+ public MyBean  getBean(){ 
+       return new MyBean()
+ }
+
+}
+
+Module Level
+
+@Configuration
+@Conditional(...)
+class MyBeanConfig {
+
+ @Bean
+ public MyBean  getBean(){ 
+       return new MyBean()
+ }
+
+}
+
+Component Level
+
+@Component
+@Conditional(...)
+class MyComponent {
+
+ 
+}
+........................................................................................................
+
+PreDefined Conditions:
+......................
+1.ConditionalOnProperty 
+   Loads beans based on env property - application.properties
+2.ConditionalOnExpression
+3.ConditionalOnBean
+4.ConditionalOnMissingBean
+5.ConditionalOnResource
+6.ConditionalOnClass
+7.ConditionalOnJava -  version based
+
+etc..
+custom conditions
+Boolean Operators
+Or
+And
+
+ConditionalBean:
+
+-OnBean - The bean if  threre , what should i do
+
+eg:
+if Mysql dependency (driver jar) in the build path
+     -Create Datasource Object
+           -Add properties - connection string - url,password,userName
+
+
+-OnMissing -Then bean if not there ,what should i do
+  if web missing, then start console container
+
+Implmentation: Conditional:
+............................
+package com.ibm.springbootbasics.config;
+
+public class OptionalBean {
+    public OptionalBean() {
+        System.out.println("Optional Bean");
+    }
+}
+package com.ibm.springbootbasics.config;
+
+public class DependantBean {
+    public DependantBean() {
+        System.out.println("Dependant Bean is ready!");
+    }
+}
+package com.ibm.springbootbasics.config;
+
+import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+
+@Configuration
+public class DependantBeanConfig {
+
+    @Bean
+    public OptionalBean optionalBean() {
+        return new OptionalBean();
+    }
+
+    @Bean
+    //@ConditionalOnMissingBean(OptionalBean.class)
+    @ConditionalOnBean(OptionalBean.class)
+    //create this bean(DependantBean only if  Optional Bean is Avaliable, if not dont create
+    public DependantBean dependantBean() {
+        return new DependantBean();
+    }
+
+
+}
+package com.ibm.springbootbasics;
+
+import org.springframework.boot.SpringApplication;
+import org.springframework.boot.autoconfigure.SpringBootApplication;
+
+@SpringBootApplication
+public class SpringbootbasicsApplication {
+
+	public static void main(String[] args) {
+		SpringApplication.run(SpringbootbasicsApplication.class, args);
+	}
+
+}
+ackage com.valtech.bootapp.conditionalonclass;
+
+public class RequiredClass {
+}
+package com.valtech.bootapp.conditionalonclass;
+
+import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingClass;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+
+@Configuration
+//@ConditionalOnClass(name = "com.valtech.bootapp.conditionalonclass.RequiredClass2")
+public class SpringConfig {
+
+    @Bean
+    //@ConditionalOnClass(value = RequiredClass.class)
+//    @ConditionalOnClass(name = "com.valtech.bootapp.conditionalonclass.RequiredClass")
+    public MyClass getMyClass() {
+        return new MyClass();
+    }
+    @Bean
+    //@ConditionalOnClass(value = RequiredClass.class)
+//    @ConditionalOnMissingClass("com.valtech.bootapp.conditionalonclass.RequiredClass1")
+    public MyClass getMyClassMissing() {
+        return new MyClass("Missing Class");
+    }
+
+    public static class MyClass {
+
+        public MyClass(String message) {
+            System.out.println(message);
+        }
+
+        public MyClass() {
+            System.out.println("MyClass");
+        }
+    }
+}
+
+
+Conditional Componnent:
+
+@Component
+@ConditionalXXX
+public class MyComponent{}
+
+@ConditionalOnProperty("value.endabled",havingValue="true",matchIfMissing=true)
+@Configuration
+public class CrossCuttingModule{
+
+}
+....................................................................................
+				......................................................................................			@SpringBootApplication
+.....................................................................................
+
+@SpringBootConfiguration
+@EnableAutoConfiguration
+@ComponentScan
+@SpringBootApplication
+
+ackage com.ibm;
+
+import org.springframework.boot.SpringApplication;
+import org.springframework.boot.SpringBootConfiguration;
+import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
+import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.context.annotation.ComponentScan;
+
+@SpringBootApplication
+//@SpringBootConfiguration
+//@EnableAutoConfiguration
+//@ComponentScan
+public class MyspringbootApplication {
+
+	public static void main(String[] args) {
+		SpringApplication.run(MyspringbootApplication.class, args);
+	}
+
+}
+Configuration   ------> Bean Creations - <bean>
+@@SpringBootConfiguration
+
+@EnableAutoConfiguration
+
+ -Tells Spring boot to guess how you  want to configure spring,based on the jar dependencies that you have addeded
+
+-IT auto configures the beans that are present in the class path.
+
+ This simplifies the developer work by guuessing the required beans from the class path and configures to run the application.
+
+-for eg, H2 is on your class path, you have not manually configured any database connection beans, then spring will auto configure an in memory database.
+
+
+@ComponentScan
+ Tells spring to look for other components,configurations and all services in the specificied package.
+Spring is able to auto scan,detect  and register your beans or components from predefined project package.
+if no package is specified current class package is taken as the root package.
+.....................................................................................
+			  Bean creations in Spring Boot
+.....................................................................................
+
+package com.ibm.springbootbasics.beans;
+
+import org.springframework.stereotype.Service;
+
+@Service
+public class HelloService {
+    public String sayHello() {
+        return "Hello";
+    }
+}
+package com.ibm.springbootbasics.beans;
+
+public class User {
+    private String id;
+    private String name;
+
+    public User(String id, String name) {
+        this.id = id;
+        this.name = name;
+    }
+
+    @Override
+    public String toString() {
+        return "User{" +
+                "id='" + id + '\'' +
+                ", name='" + name + '\'' +
+                '}';
+    }
+
+    public User() {
+    }
+
+    public String getId() {
+        return id;
+    }
+
+    public void setId(String id) {
+        this.id = id;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
+    }
+}
+package com.ibm.springbootbasics.beans.config;
+
+import com.ibm.springbootbasics.beans.User;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+
+@Configuration
+public class AppConfig {
+
+    @Bean
+    public User createUser() {
+        return new User("1", "Subramanian");
+    }
+}
+package com.ibm.springbootbasics;
+
+import com.ibm.springbootbasics.beans.HelloService;
+import com.ibm.springbootbasics.beans.User;
+import org.springframework.boot.SpringApplication;
+import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.context.ConfigurableApplicationContext;
+
+@SpringBootApplication
+public class SpringBootBeanCreations {
+    public static void main(String[] args) {
+        ConfigurableApplicationContext context = SpringApplication.run(SpringBootBeanCreations.class);
+        var hello = context.getBean(HelloService.class);
+        System.out.println(hello.sayHello());
+        var user = context.getBean(User.class);
+        System.out.println(user);
+    }
+}
+
+Note:
+
+YOu have to have Explicit configuration and bean creation if the class is not annotated with any "StreoType" Annotations.
+.....................................................................................
+		Command Line Runner Interface
+....................................................................................
+
+CommandLineRunner interface is used to initalize the some data during app start up,
+which is similar to "Life Cycle Hooks" in Bean...
+CommandLineRunner is not part of any bean, rather part of whole app.
+
+Use Cases:
+
+1.Data base mock data initalization
+
+Example:
+
+There are two ways
+
+1.Via interface implementations like tradtional OO style
+2.via Functional programming..
+
+package com.ibm.springbootbasics;
+
+import org.springframework.boot.CommandLineRunner;
+import org.springframework.boot.SpringApplication;
+import org.springframework.boot.autoconfigure.SpringBootApplication;
+
+@SpringBootApplication
+public class CommandLineInterfaceDemo implements CommandLineRunner {
+    public static void main(String[] args) {
+        var context = SpringApplication.run(CommandLineInterfaceDemo.class);
+    }
+
+    @Override
+    public void run(String... args) throws Exception {
+        System.out.println("something... is being initalized");
+    }
+}
+
+Functional Style:
+package com.ibm.springbootbasics.config;
+
+import org.springframework.boot.CommandLineRunner;
+import org.springframework.boot.SpringApplication;
+import org.springframework.boot.autoconfigure.SpringBootApplication;
+
+@SpringBootApplication
+public class CommandLineInterfaceFunctionalStyle {
+    public static void main(String[] args) throws Exception {
+        var context = SpringApplication.run(CommandLineInterfaceFunctionalStyle.class);
+
+//        var r=new CommandLineRunner() {
+//            @Override
+//            public void run(String... args) throws Exception {
+//                System.out.println("something is initalized");
+//               System.out.println(args);
+//            }
+//        };
+//        r.run("hello , run");
+//        new CommandLineRunner() {
+//            @Override
+//            public void run(String... args) throws Exception {
+//                System.out.println("something is initalized");
+//                System.out.println(args);
+//            }
+//        }.run();
+        //r.run("hello , run");
+        ((CommandLineRunner) args1 -> {
+            System.out.println("something is initalized");
+            System.out.println(args1);
+        }).run();
+
+    }
+}
+....................................................................................
+			CommandLineRunner in a separate class
+....................................................................................
+
+package com.ibm.springbootbasics;
+
+import org.springframework.boot.CommandLineRunner;
+import org.springframework.stereotype.Component;
+
+@Component
+public class DataLoader implements CommandLineRunner {
+    @Override
+    public void run(String... args) throws Exception {
+        System.out.println("Loading data...");
+
+    }
+}
+package com.ibm.springbootbasics;
+
+import org.springframework.boot.SpringApplication;
+import org.springframework.boot.autoconfigure.SpringBootApplication;
+
+@SpringBootApplication
+public class CommandLineRunnerSeparate {
+    public static void main(String[] args) {
+        var context = SpringApplication.run(CommandLineRunnerSeparate.class);
+    }
+}
+.....................................................................................
+		Higher order function pattern-Return Function
+.....................................................................................
+package com.ibm.springbootbasics;
+
+import org.springframework.boot.CommandLineRunner;
+import org.springframework.boot.SpringApplication;
+import org.springframework.boot.autoconfigure.SpringBootApplication;
+
+@SpringBootApplication
+public class CommandLineInterfaceHOF {
+    public static void main(String[] args) {
+        var context = SpringApplication.run(CommandLineRunnerSeparate.class);
+        try {
+            runner().run("");
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    //separate method
+    public static CommandLineRunner runner() {
+//        return new CommandLineRunner() {
+//            @Override
+//            public void run(String... args) throws Exception {
+//                System.out.println("runner is initialized");
+//            }
+//        };
+        //lambda version
+        return args -> System.out.println("runner is initialized");
+    }
+}
+
+
+
+
+
+	
+
+
+
+
+
+
 
 

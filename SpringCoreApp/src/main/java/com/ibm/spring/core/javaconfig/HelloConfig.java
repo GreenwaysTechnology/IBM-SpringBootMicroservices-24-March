@@ -6,7 +6,7 @@ import org.springframework.context.annotation.Configuration;
 @Configuration
 public class HelloConfig {
 
-    @Bean
+   // @Bean
     public  Hello createHello(){
         return  new Hello();
     }
