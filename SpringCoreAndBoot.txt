@@ -3114,17 +3114,243 @@ public class CommandLineInterfaceHOF {
         return args -> System.out.println("runner is initialized");
     }
 }
+.....................................................................................
+	 CommandLineRunner interface ,functional Style,automated bean creations
+....................................................................................
 
+    public static CommandLineRunner runner() {
 
+        //lambda version
+        return args -> System.out.println("runner is initialized");
+    }
 
+      public static void main(String[] args) {
+        var context = SpringApplication.run(CommandLineRunnerSeparate.class);
+        try {
+            runner().run("");
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+    }
 
+In the above pattern, run method need to be called...
 
+package com.ibm.springbootbasics;
+
+import org.springframework.boot.CommandLineRunner;
+import org.springframework.boot.SpringApplication;
+import org.springframework.context.annotation.Bean;
+
+public class CommandLineRunnerBean {
+    public static void main(String[] args) {
+        var context = SpringApplication.run(CommandLineRunnerBean.class);
+
+    }
+
+    @Bean
+    public CommandLineRunner runner() {
+        return args -> System.out.println("Bean runner is initialized");
+    }
+}
+.....................................................................................
+			How to access application.properties 
+....................................................................................
 	
+In order to define properties, just add properties in application.properties
+spring.application.name=springbootbasics
+
+#Custom application properties
+greeter.message=Hello
+greeter.name=Subramanian Murugan
+
+in order to read property value , we have @Value("${property.name}") annotation.
 
 
+package com.ibm.springbootbasics.properties;
+
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Component;
+
+@Component
+public class Greeter {
+
+    @Value("${greeter.message}")
+    private String message;
+
+    @Value("${greeter.name}")
+    private String name;
+
+    public String getMessage() {
+        return message + name;
+    }
+}
+package com.ibm.springbootbasics.properties;
+
+import org.springframework.boot.SpringApplication;
+import org.springframework.boot.autoconfigure.SpringBootApplication;
+
+@SpringBootApplication
+public class PropertyMain {
+    public static void main(String[] args) {
+        var context = SpringApplication.run(PropertyMain.class);
+        var greeter = context.getBean(Greeter.class);
+        System.out.println(greeter.getMessage());
+
+    }
+}
+.....................................................................................
+             Reading Properties via "Environment" Object
+....................................................................................
+
+package com.ibm.springbootbasics.properties;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.core.env.Environment;
+import org.springframework.stereotype.Component;
+
+@Component
+public class Greeter {
+
+    @Value("${greeter.message}")
+    private String message;
+
+    @Value("${greeter.name}")
+    private String name;
+
+    @Autowired
+    private Environment environment;
+
+    public String getMessage() {
+        return message + name;
+    }
+
+    public String getInfo() {
+        return environment.getProperty("greeter.message", "Hey");
+    }
+}
+application.properties
+spring.application.name=springbootbasics
+
+#Custom application properties
+greeter.message=Hello
+greeter.name=Subramanian Murugan
 
 
+@Value vs Environment:
+......................
+
+@Value annotation is used to read value from application.properties ,if property does not , it will throw error.
+
+Environment is used to read value from application.properties, if property does not exits, we can provide default value.
+....................................................................................
+	  Isloating properties into separate class inject Where ever you want
+....................................................................................
 
 
+application.properties
+#property category
+app.name=MyApp
+app.author=Ibm
+app.version=1.1.0
+app.type=webapp
 
+package com.ibm.springbootbasics.properties;
 
+import org.springframework.boot.context.properties.ConfigurationProperties;
+import org.springframework.context.annotation.Configuration;
+
+@Configuration
+@ConfigurationProperties(prefix = "app")
+public class AppConfiguration {
+
+    private String name;
+    private String author;
+    private String version;
+    private String type;
+
+    public String getName() {
+        return name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
+    }
+
+    public String getAuthor() {
+        return author;
+    }
+
+    public void setAuthor(String author) {
+        this.author = author;
+    }
+
+    public String getVersion() {
+        return version;
+    }
+
+    public void setVersion(String version) {
+        this.version = version;
+    }
+
+    public String getType() {
+        return type;
+    }
+
+    public void setType(String type) {
+        this.type = type;
+    }
+}
+
+package com.ibm.springbootbasics.properties;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.core.env.Environment;
+import org.springframework.stereotype.Component;
+
+@Component
+public class Greeter {
+
+    @Value("${greeter.message}")
+    private String message;
+
+    @Value("${greeter.name}")
+    private String name;
+
+    @Autowired
+    private Environment environment;
+
+    //Inject Configuration class
+    @Autowired
+    private AppConfiguration appConfiguration;
+
+    public String getMessage() {
+        return message + name;
+    }
+
+    public String getInfo() {
+        return environment.getProperty("greeter.message", "Hey");
+    }
+
+    public String getConfig() {
+        return appConfiguration.getName() + " " + appConfiguration.getAuthor();
+    }
+}
+....................................................................................
+			Reading Properties within Property file
+.....................................................................................
+spring.application.name=springbootbasics
+
+#Custom application properties
+greeter.message=Hello
+greeter.name=Subramanian Murugan
+
+#property category
+app.name=${spring.application.name}
+app.author=Ibm
+app.version=1.1.0
+app.type=webapp
+
+Based on "Spel" Spring Expression language
+.....................................................................................
