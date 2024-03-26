@@ -477,38 +477,775 @@ public class TodoService {
     }
 }
 
+.....................................................................................
+			How to pass data to the rest api
+....................................................................................
+
+How to pass input to the api?
+
+There are two ways to pass data to the rest api
+
+1.as part of url - parameters
+2.as part of body - payload
+
+
+Parameters:
+
+1.path parameters
+2.Query parameter
+3.Matrix Parameter -Optional
+
+Path Parameter:
+http://localhost:8080/products/1
+http://localhost:8080/products/2
+
+HTTP Request Structure:
+
+Request contains two segments
+
+1.Request headers
+  HTTP Request Header, meta information about on going request
+2.Request body
+  Data what we pass..
+
+Parameters vs Payload:
+ Parameters and payload both are used to send data to servr
+
+Parameters are send via "URL" as part of the URL.
+
+http://localhost:8080/products/1
+http://localhost:8080/products?sorting=asyc
+
+Payload is used to send data as part of request body which is hidden from the user, we cant see it.
+Suppose if i want to send customer information as json...
+...................................................................................
+			 Path Parameters - dynamic url
+...................................................................................
+
+Path Parameter syntax:
+  -Query information based on dynamic input called path.
+
+/products/{placeholder}
+/products/1
+
+eg:
+package com.ibm.web.api.todos.service;
+
+import com.ibm.web.api.todos.entity.Todo;
+import jakarta.annotation.PostConstruct;
+import org.springframework.boot.CommandLineRunner;
+import org.springframework.context.annotation.Bean;
+import org.springframework.stereotype.Service;
+
+import java.util.List;
+
+@Service
+public class TodoService {
+
+    private List<Todo> todos;
+
+//    @PostConstruct
+//    public void init() {
+//        todos = List.of(
+//                new Todo(1l, 1l, "delectus aut autem", false),
+//                new Todo(1l, 2l, "quis ut nam facilis et officia qui", false),
+//                new Todo(1l, 3l, "fugiat veniam minus", false),
+//                new Todo(1l, 4l, "et porro tempora", true));
+//    }
+
+    @Bean
+    public CommandLineRunner init() {
+        return args -> {
+            todos = List.of(
+                    new Todo(1l, 1l, "delectus aut autem", false),
+                    new Todo(1l, 2l, "quis ut nam facilis et officia qui", false),
+                    new Todo(1l, 3l, "fugiat veniam minus", false),
+                    new Todo(1l, 4l, "et porro tempora", true));
+        };
+    }
+
+    public List<Todo> findAll() {
+        return todos;
+    }
+
+    public Todo findById(Long item) {
+        return new Todo(item, 8l,"Learn Spring", false);
+    }
+}
+package com.ibm.web.api.todos;
+
+import com.ibm.web.api.todos.entity.Todo;
+import com.ibm.web.api.todos.service.TodoService;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+
+import java.util.List;
+
+@RestController
+@RequestMapping("todos")
+public class TodoController {
+
+    @Autowired
+    private TodoService todoService;
+
+    @GetMapping
+    public List<Todo> findAll() {
+        return todoService.findAll();
+    }
+
+    @GetMapping
+    @RequestMapping("{id}")
+    public Todo findById(@PathVariable("id") Long id) {
+        return  todoService.findById(id);
+    }
+}
+
+Testing:
+http://localhost:8080/todos/10
+
+Response:
+{
+ userId: 10,
+ id: 8,
+ title: "Learn Spring",
+ completed: false
+}
+.....................................................................................
+				Query parameter/QueryString
+....................................................................................
+
+Syntax:
+http://localhost:8080/todos/filter?completed=true
+
+
+package com.ibm.web.api.todos;
+
+import com.ibm.web.api.todos.entity.Todo;
+import com.ibm.web.api.todos.service.TodoService;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
+
+@RestController
+@RequestMapping("todos")
+public class TodoController {
+
+    @Autowired
+    private TodoService todoService;
+    @GetMapping
+    @RequestMapping("filter")
+    public List<Todo> filterByStatus(@RequestParam("status") Boolean status) {
+        return todoService.filterBy(status);
+    }
+}
+package com.ibm.web.api.todos.service;
+
+import com.ibm.web.api.todos.entity.Todo;
+import jakarta.annotation.PostConstruct;
+import org.springframework.boot.CommandLineRunner;
+import org.springframework.context.annotation.Bean;
+import org.springframework.stereotype.Service;
+
+import java.util.List;
+
+@Service
+public class TodoService {
+
+    private List<Todo> todos;
+
+    @Bean
+    public CommandLineRunner init() {
+        return args -> {
+            todos = List.of(
+                    new Todo(1l, 1l, "delectus aut autem", false),
+                    new Todo(1l, 2l, "quis ut nam facilis et officia qui", false),
+                    new Todo(1l, 3l, "fugiat veniam minus", false),
+                    new Todo(1l, 4l, "et porro tempora", true));
+        };
+    }
+
+    public List<Todo> filterBy(Boolean status) {
+        return List.of(new Todo(1l, 1l, "delectus aut autem", status));
+    }
+}
+
+Testing:
+http://localhost:8080/todos/filter?status=true
+
+[
+{
+userId: 1,
+id: 1,
+title: "delectus aut autem",
+completed: true
+}
+]
+....................................................................................
+			Sending Payload to Server
+....................................................................................
+
+Payload is used  to send for insert, update
+
+How to read Data/payload?
+
+@RequestBody annotation is used to read payload.
+
+package com.ibm.web.api.todos;
+
+import com.ibm.web.api.todos.entity.Todo;
+import com.ibm.web.api.todos.service.TodoService;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
+
+@RestController
+@RequestMapping("todos")
+public class TodoController {
+
+    @Autowired
+    private TodoService todoService;
+
+    //save
+    @PostMapping
+    public Todo save(@RequestBody Todo todo) {
+        return todoService.save(todo);
+    }
+}
+
+package com.ibm.web.api.todos.service;
+
+import com.ibm.web.api.todos.entity.Todo;
+import jakarta.annotation.PostConstruct;
+import org.springframework.boot.CommandLineRunner;
+import org.springframework.context.annotation.Bean;
+import org.springframework.stereotype.Service;
+
+import java.util.List;
+
+@Service
+public class TodoService {
+
+  
+    public Todo save(Todo todo) {
+        //YOu have to write logic to insert
+        return todo;
+    }
+}
+
+Testing 
+
+POST /todos 
+    {
+        "userId": 1100,
+        "id": 134,
+        "title": "delectus aut autem",
+        "completed": true
+    }
+
+Response:
+
+    {
+        "userId": 1100,
+        "id": 134,
+        "title": "delectus aut autem",
+        "completed": true
+    }
+
+Update:
+package com.ibm.web.api.todos;
+
+import com.ibm.web.api.todos.entity.Todo;
+import com.ibm.web.api.todos.service.TodoService;
+import jakarta.websocket.server.PathParam;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
+
+@RestController
+@RequestMapping("todos")
+public class TodoController {
+
+    @Autowired
+    private TodoService todoService;
+    //update
+
+    @PutMapping
+    @RequestMapping("update/{id}")
+    public Todo update(@RequestBody Todo todo, @PathParam("id") Long id) {
+        return todoService.update(todo, id);
+    }
+}
+package com.ibm.web.api.todos.service;
+
+import com.ibm.web.api.todos.entity.Todo;
+import jakarta.annotation.PostConstruct;
+import org.springframework.boot.CommandLineRunner;
+import org.springframework.context.annotation.Bean;
+import org.springframework.stereotype.Service;
+
+import java.util.List;
+
+@Service
+public class TodoService {
+
+    private List<Todo> todos;
+    public Todo update(Todo todo, Long id) {
+        return new Todo(todo.getUserId(), todo.getId(), todo.getTitle(), todo.isCompleted());
+    }
+}
+....................................................................................
+			Output-Return Type
+....................................................................................
+
+api is just method:
+ It can return value..
+
+Return Types:
+
+1.String
+2.Object - Collection or Object type 
+3.ResponseEntity
+4.void
+5.Reactive Type - Mono /Flux - Web Flux
+
+Based on Return type, Content Type would be converted
+
+String - Plain/text
+Object/Collection - application/json
+ResonseEntity - application/json
+void - only status code
+ReactiveType  - application/json.
+
+Response:
+ The reponse can have two things.
+1.payload - Data which is returned
+2.Meta data-headers
+  Headers are just variables which hold some values which describe the nature of reponse.
+
+Response Headers:
+1.Content-Type
+
+Content-Type: text/html; charset=utf-8
+
+The MIME type of this content. What type of data server is sending to client.
+
+Basic content type of web is:
+  HTML
+  Plain/text
+Rest content type is :
+  
+  Representational State Transfer
+      |             |
+   Data Format     Data
+      |
+json
+xml
+pdf
+word
+etc...
+
+By Default in REST is "json"
+
+2.Content-Length
+
+Content-Length: 348
+
+The length of the response body expressed in 8-bit bytes
+
+
+3.Date
+Date: Tue, 15 Nov 1994 08:12:31 GMT
+
+The date and time that the message was sent (in “HTTP-date” format as defined by RFC 7231)
+
+4.keep-alive
+  It is header which talks how long the http connection can exits between server and client default is 60ms
+
+5.Connection
+Connection: close
+
+Control options for the current connection and list of hop-by-hop response fields. Deprecated in HTTP/2
+
+.....................................................................................
+			Sending Status Code
+....................................................................................
+
+HTTP operation Status:
+
+-> informational response - 100 to 199-1X
+-> success response -  200-299-2X
+-> Redirects  - 300-399 -3X
+-> client errors - 400-499 -4X
+-> server errrors - 500-599 - 5X
+
+Status Code : 100 to 500
+1XX Information Responses
+
+100 Continue
+101 Switching Protocols
+102 Processing
+103 Early Hints
+
+2XX Success
+
+200 OK
+201 Created
+202 Accepted
+203 Non-Authoritative Information
+204 No Content
+205 Reset Content
+206 Partial Content
+207 Multi-Status
+208 Already Reported
+226 IM Used
+
+3XX Redirection
+300 Multiple Choices
+301 Moved Permanently
+302 Found
+303 See Other
+304 Not Modified
+305 Use Proxy
+306 Switch Proxy
+307 Temporary Redirect
+308 Permanent Redirect
+
+4XX Client errors
+
+400 Bad Request
+401 Unauthorized
+402 Payment Required
+403 Forbidden
+404 Not Found
+405 Method Not Allowed
+406 Not Acceptable
+407 Proxy Authentication Required
+408 Request Timeout
+409 Conflict
+410 Gone
+411 Length Required
+412 Precondition Failed
+413 Payload Too Large
+414 URI Too Long
+415 Unsupported Media Type
+416 Range Not Satisfiable
+417 Expectation Failed
+418 I'm a teapot
+420 Method Failure
+421 Misdirected Request
+422 Unprocessable Entity
+423 Locked
+424 Failed Dependency
+426 Upgrade Required
+428 Precondition Required
+429 Too Many Requests
+431 Request Header Fields Too Large
+451 Unavailable For Legal Reasons
+
+5XX Server errors
+500 Internal Server error
+501 Not Implemented
+502 Bad Gateway
+503 Service Unavailable
+504 gateway Timeout
+505 Http version not supported
+506 Varient Also negotiate
+507 Insufficient Storage
+508 Loop Detected
+510 Not Extended
+511 Network Authentication Required
+
+ "By default spring sends 200 status for all success request and response."
+
+What if i want to send some special status code?
+
+According to Rest , Post method must return 201.
+
+
+How to add StatusCode in the Response?
+
+    @PostMapping
+    @ResponseStatus(HttpStatus.CREATED)
+    public String save(){
+        return "Saved";
+    }
+
+package com.ibm.web.api.todos;
+
+import com.ibm.web.api.todos.entity.Todo;
+import com.ibm.web.api.todos.service.TodoService;
+import jakarta.websocket.server.PathParam;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
+
+@RestController
+@RequestMapping("todos")
+public class TodoController {
+
+    @Autowired
+    private TodoService todoService;
+
+    //save
+    @PostMapping
+    @ResponseStatus(HttpStatus.CREATED)
+    public Todo save(@RequestBody Todo todo) {
+        return todoService.save(todo);
+    }
+   
+}
+..................................................................................
+			 ResponseEntity
+..................................................................................
+
+What if i want to send custom header
+
+ResponseEntity is object , used to encapsulate meta data
+
+package com.ibm.web.api.todos;
+
+import com.ibm.web.api.todos.entity.Todo;
+import com.ibm.web.api.todos.service.TodoService;
+import jakarta.websocket.server.PathParam;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
+
+@RestController
+@RequestMapping("todos")
+public class TodoController {
+
+    @Autowired
+    private TodoService todoService;
+
+   @PostMapping
+    public ResponseEntity<Todo> save(@RequestBody Todo todo) {
+        return ResponseEntity
+                .status(201)
+                .header("name", "ibm")
+                .header("location", "Banaglore")
+                .contentType(MediaType.APPLICATION_JSON)
+                .body(todoService.save(todo));
+    }
+
+ 
+}
+.....................................................................................
+		     Reactive Programming and Spring
+			    (Web flux)
+....................................................................................
+
+The reactive-stack web framework, Spring WebFlux, has been added to Spring 5. It is fully non-blocking, supports reactive streams back pressure, and runs on such servers as Netty, Undertow, and Servlet 3.1+ containers.
+
+Reactive Stack:
+
+ Reactive is new programming model, helps to build non blocking / async applications.
+ 
+
+Traditional web vs Reactive/NonBlocking  web application:
+.........................................................
+
+How we use threads,thats where the difference.
+
+In traditional web applications, every request is mapped against a separate dedicated thread - this is called as "Request Per thread Model"
+
+for eg in 1ms , the webserver recieves 100 requests, the web server will have 100 threads.
+
+Request Per thread model drawbacks:
+
+1.Operating system need to maintain so much threads, so that os need more memory, and also operating system need to do context switch a lot, so cpu power is used heavily..
+
+How to manange this?
+
+ We need less threads, thats where new technology was created called "non blocking and async"
+
+Non blocking arch brought  new threading model, where as having limited no of threads, we can achive maximum concurrency...
+
+Threads are reused by multiple request--response handling.
+....................................................................................
+			Spring and Nonblocking arch
+.....................................................................................
+
+Webflux is framework built on the top of "Project reactor", which is spring wrapper..
+
+WebFlux provides a feature to build async and non blocking apps.
+
+Webflux web server is not tomcat, rather we use "netty" server which is non blocking server..
+
+
+WebFlux provide two Return Type
+
+1.Mono - Return single value
+2.Flux - Return sequence of stream of values
+
+.....................................................................................
+
+Spring web Flux Project:
+
+1.Spring Web flux is a parallel version of spring mvc and supports fully non blocking reactive streams
+
+Create Spring mvc app with spring-webflux dependency:
+.....................................................
+
+<dependency>
+	<groupId>org.springframework.boot</groupId>
+	<artifactId>spring-boot-starter-webflux</artifactId>
+</dependency>
 
 
 
+package com.ibm.reactor;
+
+import com.ibm.reactor.entity.Todo;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+import reactor.core.publisher.Mono;
+
+import java.util.List;
+
+@RestController
+@RequestMapping("todo")
+public class TodoController {
 
 
+    @GetMapping
+    public Mono<List<Todo>> findAll() {
+        return Mono.just(List.of(new Todo(1, 3, "Learn Spring Webflux", false)));
+    }
+}
+
+Note:
+ When we create app in micro services, please create with "Reactive Type" - netty server..
+.....................................................................................
+		      Data base Programming in Spring
+....................................................................................
+
+Java language can talk to any database
+Java uses jdbc api to talk to database
+In order to write jdbc programming in more efficient way,  ORM - object relational mapping- Object oriented way of writing database code.
+
+Generally database deals with SQL Queries
+
+Hibernate and JPA:
+..................
+JPA is ORM Specification from java , Hibernate is implementation....
+
+Spring boot and JPA With Hibernate:
+...................................
 
 
+				App
+				 |
+				JPA
+			---------------------------------
+			|                             |
+		  Top link                         Hibernate
+		      |                              |
+		 ------------------------------------------
+				|
+			    JDBC - low level api
+				|
+			      Databases
+
+...................................................................................
+			   Spring Data 
+
+Spring Data is collection of many data related projects , in order to connect with various data sources.
+
+Spring Data Jdbc:
+  Working with direct jdbc layer...
+
+Spring Data JPA:
+  Spring Data JPA, part of the larger Spring Data family, makes it easy to easily implement JPA-based (Java Persistence API) repositories.
+  You can connect with any relational databases
+   Mysql,Postgresql,oracle,sqlserver etc....
 
 
+Spring Data LDAP
+  Connecting and working with LDAP
+
+Spring data MongoDB
+ Spring Data for MongoDB is part of the umbrella Spring Data providing integration with the MongoDB document database
 
 
+Spring Data Redis
+  Spring Data Redis, part of the larger Spring Data portfolio, provides easy configuration and access to Redis from Spring applications
+
+etc...
+..................................................................................
+			  Spring Data JPA
+..................................................................................
+
+Prerequiest:
+
+1.You must know the JPA with Hibernate
 
 
+Steps:
+
+1.You need database - h2,postgres,mysql,oracle.....
+    datbase should be up and running
+How to setup database?
+
+1.You can down load database, and you start
+2.YOu can use docker to start database
+3.You can use in memory database - only for development purpose
+
+2.You database drivers to be added in the project dependencies
+
+3.You need to add jpa starter depedency...
 
 
+Example:
+
+we are going to use h2 database.
+
+Project Dependencies:
+<dependency>
+      <groupId>org.springframework.boot</groupId>
+      <artifactId>spring-boot-starter-data-jpa</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.springframework.boot</groupId>
+      <artifactId>spring-boot-starter-web</artifactId>
+    </dependency>
+
+    <dependency>
+      <groupId>com.h2database</groupId>
+      <artifactId>h2</artifactId>
+      <scope>runtime</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.projectlombok</groupId>
+      <artifactId>lombok</artifactId>
+      <optional>true</optional>
+    </dependency>
+    <dependency>
+      <groupId>org.springframework.boot</groupId>
+      <artifactId>spring-boot-starter-test</artifactId>
+      <scope>test</scope>
+    </dependency>
 
 
+Database Configuration:
+
+application.properties
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
+ 
 
   
    

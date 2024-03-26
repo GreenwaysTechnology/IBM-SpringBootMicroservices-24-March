@@ -3354,3 +3354,74 @@ app.type=webapp
 
 Based on "Spel" Spring Expression language
 .....................................................................................
+				YAML Config
+....................................................................................
+
+YAML is most popular in  dev ops env, like kubernates,ansibal,cloud....
+
+Spring by default supports yaml.
+
+Spring community recommends yaml format mostly..
+
+In projects you can mix and match or single format...
+
+application.yml or application.yaml
+
+How to read yaml properties?
+
+Using @Value annotation
+Using Environment
+Using @ConfigProperties
+
+resources/application.yml
+
+project:
+  name : SpringBoot
+  author: IBM
+
+
+package com.ibm.springbootbasics.yaml;
+
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Component;
+
+@Component
+public class Project {
+
+    @Value("${project.name}")
+    private  String name;
+
+    public String getName(){
+        return  name;
+    }
+}
+package com.ibm.springbootbasics.yaml;
+
+import org.springframework.boot.SpringApplication;
+import org.springframework.boot.autoconfigure.SpringBootApplication;
+
+@SpringBootApplication
+public class YamlMain {
+    public static void main(String[] args) {
+        var context = SpringApplication.run(YamlMain.class);
+        var project = context.getBean(Project.class);
+        System.out.println(project.getName());
+    }
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
