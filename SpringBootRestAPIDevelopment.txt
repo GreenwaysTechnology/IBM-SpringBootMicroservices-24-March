@@ -1204,7 +1204,7 @@ How to setup database?
 2.YOu can use docker to start database
 3.You can use in memory database - only for development purpose
 
-2.You database drivers to be added in the project dependencies
+2.You must have database drivers to be added in the project dependencies
 
 3.You need to add jpa starter depedency...
 
@@ -1243,14 +1243,208 @@ Project Dependencies:
 Database Configuration:
 
 application.properties
+spring.application.name=jparestapp
 
+spring.datasource.url=jdbc:h2:mem:testdb
+spring.datasource.driverClassName=org.h2.Driver
+spring.datasource.username=sa
+spring.datasource.password=
+spring.datasource.jpa.database-platform=org.hibernate.dialect.H2Dialect
+spring.h2.console.enabled=true
+spring.h2.console.path=/h2
+
+
+Note:
+ When we use h2 database  , we cant have "Webflux", since h2 does not support non blocking implemnetation. but when use other databses , there will not be any issue..
 
  
 
-  
+Declare entity Class
    
+package com.ibm.jparestapp.entity;
+
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+
+@Entity
+public class Customer {
+    @Id
+    @GeneratedValue(strategy = GenerationType.AUTO)
+    private Long id;
+    private String firstName;
+    private String lastName;
+
+    public Customer() {
+    }
+
+    public Customer(Long id, String firstName, String lastName) {
+        this.id = id;
+        this.firstName = firstName;
+        this.lastName = lastName;
+    }
+
+    public Long getId() {
+        return id;
+    }
+
+    public void setId(Long id) {
+        this.id = id;
+    }
+
+    public String getFirstName() {
+        return firstName;
+    }
+
+    public void setFirstName(String firstName) {
+        this.firstName = firstName;
+    }
+
+    public String getLastName() {
+        return lastName;
+    }
+
+    public void setLastName(String lastName) {
+        this.lastName = lastName;
+    }
+}
+
+Declare Repository Interface:
+.............................
+
+Spring Data JPA provides wrapper interfaces which provides ready made CURD operations.
+
+We dont need to write any sql queries...
 
 
+package com.ibm.jparestapp.repository;
+
+import com.ibm.jparestapp.entity.Customer;
+import org.springframework.data.jpa.repository.JpaRepository;
+
+import java.util.List;
+
+public interface CustomerRepository extends JpaRepository<Customer, Long> {
+    //customer db apis
+    List<Customer> findByLastName(String lastName);
+
+    Customer findById(long id);
+}
+
+
+Mock data: add some rows during startup...
+
+package com.ibm.jparestapp;
+
+import com.ibm.jparestapp.entity.Customer;
+import com.ibm.jparestapp.repository.CustomerRepository;
+import org.springframework.boot.CommandLineRunner;
+import org.springframework.boot.SpringApplication;
+import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.context.annotation.Bean;
+
+@SpringBootApplication
+public class JparestappApplication {
+
+    public static void main(String[] args) {
+        SpringApplication.run(JparestappApplication.class, args);
+    }
+
+    @Bean
+    public CommandLineRunner create(CustomerRepository repository) {
+        return (args) -> {
+            repository.save(new Customer("Subramaian", "Murugan"));
+            repository.save(new Customer("Murugan", "Palanisamy"));
+            repository.save(new Customer("Geetha", "Subramaian"));
+        };
+    }
+}
+.....................................................................................				 REST API and CURD operations
+
+package com.ibm.jparestapp.api;
+
+import com.ibm.jparestapp.entity.Customer;
+import com.ibm.jparestapp.repository.CustomerRepository;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
+import java.util.Optional;
+
+@RestController
+@RequestMapping("customers")
+public class CustomerResource {
+
+    @Autowired
+    private CustomerRepository repository;
+
+    //find all
+    @GetMapping
+    public List<Customer> findAll() {
+        return repository.findAll();
+    }
+
+    //findById
+    @GetMapping("{id}")
+    public ResponseEntity<Customer> findById(@PathVariable("id") Long id) {
+        Optional<Customer> customer = repository.findById(id);
+
+        if (customer.isPresent()) {
+            return new ResponseEntity<>(customer.get(), HttpStatus.OK);
+        } else {
+            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+        }
+
+    }
+
+    //remove row
+    @DeleteMapping("{id}")
+    public ResponseEntity<Customer> remove(@PathVariable("id") Long id) {
+        try {
+            Optional<Customer> customer = repository.findById(id);
+            if (customer.isPresent()) {
+                repository.deleteById(id);
+                return new ResponseEntity<>(HttpStatus.NO_CONTENT);
+            }
+            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+        } catch (Exception e) {
+            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+        }
+
+    }
+
+    @PutMapping("{id}")
+    public ResponseEntity<Customer> update(@PathVariable("id") Long id, @RequestBody Customer customer) {
+        try {
+            Optional<Customer> customerFound = repository.findById(id);
+            if (customerFound.isPresent()) {
+                //update logic
+                Customer tmpCustomer = customerFound.get();
+                //
+                tmpCustomer.setFirstName(customer.getFirstName());
+                tmpCustomer.setLastName(customer.getLastName());
+                Customer updatedCustomer = repository.save(tmpCustomer);
+                return new ResponseEntity<>(updatedCustomer, HttpStatus.OK);
+            }
+            return new ResponseEntity<>(new Customer(), HttpStatus.NOT_FOUND);
+        } catch (Exception e) {
+            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+        }
+
+    }
+
+    @PostMapping
+    //save
+    public ResponseEntity<Customer> save(@RequestBody Customer customer) {
+        Customer savedCustomer = repository.save(customer);
+        return new ResponseEntity<>(savedCustomer, HttpStatus.CREATED);
+    }
+
+
+}
 
 
 
