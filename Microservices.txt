@@ -416,8 +416,8 @@ Note:
 1.Database Per Service Pattern leads/succeeds other patterns
   Domain Event
   Event Sourcing 
-  Saga - Transaction
-  CQRS
+  Saga - Transaction - INSERT,UPDATE,DELETE
+  CQRS - SELECT, INSERT,UPDATE,DELETE.
   API Composition
  
 ..................................................................................
@@ -729,6 +729,7 @@ Micro service Application arch in Spring:
 		|                     |                       |
 
 	         (Microservice Pattern language implementations)  			    
+.....................................................................................
 			       Spring Cloud		
 				    |		  		 	                       .................................................
 		  Spring Core,Spring Web,Spring Data - API Development
@@ -746,7 +747,7 @@ Steps:
 
 2.Pick up design pattern.
 .....................................................................................
-				  Data 
+				   Data 
 			Event Sourcing and Domain Events
 			   Event Driven Microservices
 ....................................................................................
